@@ -1,0 +1,83 @@
+CREATE TABLE COUNTRIES(
+    ID int IDENTITY(1,1) PRIMARY KEY,
+    Currency VARCHAR(4),
+    CountryCode VARCHAR(8),
+    CountryString VARCHAR(64)
+);
+
+CREATE TABLE INDICATORS(
+    ID INT IDENTITY(1,1) PRIMARY KEY,
+    EventName VARCHAR(255) NOT NULL,
+	Country INT FOREIGN KEY REFERENCES COUNTRIES(ID)
+);
+
+CREATE TABLE INDICATOR_VALUES(
+    ID INT IDENTITY(1,1) PRIMARY KEY,
+    IndicatorId INT FOREIGN KEY REFERENCES INDICATORS(ID) NOT NULL,
+    Actual VARCHAR(8) NOT NULL,
+    ReleaseDate DATE NOT NULL
+);
+
+--TODO: Create tables for bonds
+CREATE TABLE BOND_TYPES(
+	ID INT IDENTITY(1,1) PRIMARY KEY,
+	Country INT FOREIGN KEY REFERENCES COUNTRIES(ID),
+	BondName VARCHAR(255) NOT NULL,
+);
+
+CREATE TABLE BOND_RATES(
+    ID INT IDENTITY(1,1) PRIMARY KEY,
+	TypeId INT FOREIGN KEY REFERENCES BOND_TYPES(ID),
+	BondYield DECIMAL(18,6) NOT NULL,
+	ConstantDate DATE NOT NULL,
+);
+
+
+----------------------------------------------------
+CREATE TABLE TICKERS(
+    ID INT IDENTITY(1,1) PRIMARY KEY,
+    Ticker VARCHAR(8),
+)
+CREATE TABLE STOCKS_DAILY(
+    ID INT IDENTITY(1,1) PRIMARY KEY,
+    Ticker FOREIGN KEY REFERENCES TICKERS(Ticker)
+    Open DECIMAL(18,4),
+    High INT,
+    Low INT,
+    Close INT, --Closed price
+    Adjusted INT, --Adjusted closed price
+    Date DATE NOT NULL
+);
+CREATE TABLE STOCKS_MONTHLY(
+    ID INT IDENTITY(1,1) PRIMARY KEY,
+    Ticker FOREIGN KEY REFERENCES TICKERS(Ticker)
+    Open DECIMAL(18,4),
+    High INT,
+    Low INT,
+    Close INT, --Closed price
+    Adjusted INT, --Adjusted closed price
+    Date DATE NOT NULL
+);
+CREATE TABLE STAT_TYPES(
+    ID INT IDENTITY(1,1) PRIMARY KEY,
+    IsRolling BIT DEFAULT 0,
+    RollingDurationType INT, --Months, weeks, years
+    DurationValue INT, --3,6,12, etc
+
+);
+CREATE TABLE STATS(
+    ID INT IDENTITY(1,1) PRIMARY KEY,
+    StatTypeId FOREIGN KEY REFERENCES STAT_TYPES(ID),
+    Value DECIMAL VALUE(16,2),
+)
+
+/*
+count    24208.000000
+mean         0.000307
+std          0.011952
+min         -0.204669
+25%         -0.004559
+50%          0.000484
+75%          0.005467
+max          0.166096
+*/
