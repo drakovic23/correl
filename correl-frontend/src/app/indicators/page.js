@@ -100,8 +100,8 @@ function setPmiOptions(data)
 }
 export default async function Indicators()
 {
-    const pmiData = await getPmi();
-    const pmiOptions= setPmiOptions(pmiData);
+    //const pmiData = await getPmi();
+    //const pmiOptions= setPmiOptions(pmiData);
     //console.log(pmiChartOptions.series[0].data);
 
     return(

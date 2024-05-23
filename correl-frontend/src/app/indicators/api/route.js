@@ -448,13 +448,6 @@ const allIndicators = [
             "indicatorValues": []
         },
         {
-            "id": 65,
-            "eventName": "Fed Chairman Nomination Vote",
-            "country": 1,
-            "countryNavigation": null,
-            "indicatorValues": []
-        },
-        {
             "id": 66,
             "eventName": "Housing Starts",
             "country": 1,
@@ -580,13 +573,3 @@ export async function GET (req) {
 
     return Response.json({filteredIndicators})
 }
-
-
-/*export default function handler(req, res) {
-    const { query } = req.query; // Retrieve the search term from the URL query parameter
-    const filteredIndicators = allIndicators.filter((indicator) =>
-        indicator.eventName.toLowerCase().includes(query.toLowerCase())
-    );
-
-    res.status(200).json(filteredIndicators);
-}*/

@@ -3,7 +3,6 @@
 import {AiOutlineDollar, AiOutlineLineChart, AiOutlineBarChart, AiFillHome} from 'react-icons/ai'
 import React, { useState } from 'react';
 import "@/components/SidebarNav/sidebar.css"
-import Footer from "@/components/Footer/Footer";
 export default function SidebarNav({children}) {
     const [isSidebarOpen, setSidebarOpen] = useState(true);
     const toggleSidebar = () => setSidebarOpen(!isSidebarOpen);
@@ -21,12 +20,12 @@ export default function SidebarNav({children}) {
             <div className="hidden lg:block md:block border-b border-r">
 
                 <div className={`shadow-sm border-r-1 bottom-0 top-0 sticky h-full transition-all ${isSidebarOpen ? "" : "hide"}`}>
-                    <ul className="menu p-2 lg:w-48 md:w-48 min-h-full sm:w-32 bg-base-100 text-base-content lg:text-lg md:text-sm sm:text-xs font-semibold">
-                        {/* Sidebar content here */}
-                        <li><a className="" href="/bonds"><AiFillHome/>Dashboard</a></li>
+                    <ul className="menu p-2 lg:w-48 md:w-48 min-h-full sm:w-32 bg-base-100 text-base-content xl:text-md md:text-md sm:text-sm font-semibold">
+                        {/* sidebar content */}
+                        <li><a className="" href="/stats"><AiOutlineLineChart/>Stats</a></li>
                         <li><a className="" href="/bonds"><AiOutlineDollar/>Bonds</a></li>
                         <li><a className="" href="/indicators"><AiOutlineBarChart/>Indicators</a></li>
-                        <li><a className="" href="/correlations"><AiOutlineLineChart/>Stats</a></li>
+                        <hr/>
                     </ul>
                 </div>
             </div>
@@ -48,14 +47,14 @@ export default function SidebarNav({children}) {
                         </span>
 
                         <div className="flex-1">
-                            <a className="btn btn-ghost text-xl">Lar</a>
+                            <a className="btn btn-ghost text-xl">Deni</a>
                         </div>
 
                         <hr/>
                     </div>
                     <hr className=""/>
                 </div>
-                {/*Main Content Here*/}
+                {/*Main content */}
                 <div className="flex flex-col bg-[#f2f5f8] min-h-screen">
                     {children}
 

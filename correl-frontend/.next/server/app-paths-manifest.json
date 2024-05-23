@@ -1,5 +1,0 @@
-{
-  "/indicators/page": "app/indicators/page.js",
-  "/indicators/api/route": "app/indicators/api/route.js",
-  "/bonds/page": "app/bonds/page.js"
-}

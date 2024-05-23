@@ -8,7 +8,7 @@ public partial class BondRate
     public int Id { get; set; }
 
     public int? TypeId { get; set; }
-    
+
     public decimal? BondYield { get; set; }
 
     public DateOnly ConstantDate { get; set; }

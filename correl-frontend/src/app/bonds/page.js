@@ -6,11 +6,11 @@ import HighchartsExporting from "highcharts/modules/exporting";
 import React, {useEffect, useState} from 'react';
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import Loading from "@/app/bonds/loading";
+import Loading from "@/app/loading";
 
 //TODO: Change the fetch to do it server side
 async function getYieldCurveData() {
-    const res = await fetch('http://localhost:5289/api/yield-curve')
+    const res = await fetch('https://correl-dotnet.azurewebsites.net/api/yield-curve')
 
     if (!res.ok) {
         // This will activate the closest `error.js` Error Boundary
@@ -20,7 +20,13 @@ async function getYieldCurveData() {
     return await res.json();
 }
 
+async function getYieldCurveForMonth(date)
+{
+    const res = await fetch("https://localhost:5289/api/yield-curve")
+}
+
 const months = [
+    "",
     "Jan",
     "Feb",
     "Mar",
@@ -60,14 +66,19 @@ const calcTenYearDiff = (rateData) => {
 
     return ret;
 }
+let hcColors;
 if (typeof Highcharts === 'object') {
     HighchartsExporting(Highcharts)
+    //const highChartsColors = Highcharts.getOptions().colors;
+    //hcColors = highChartsColors; //react freaks out if we don't do this
+
 }
+
 export default function Bonds()
 {
     const [yieldData, setYieldData] = useState(null);
     const [datePickerVisible, setDatePickerVisible] = useState(false);
-    const [selectedDate, setSelectedDate] = useState(new Date());
+    const [selectedDate, setSelectedDate] = useState(new Date()); //for adding a series
     const [isLoading, setIsLoading] = useState(false);
     const [yieldCurveOptions, setYieldCurveOptions] = useState({
         chart: {
@@ -111,6 +122,7 @@ export default function Bonds()
     });
 
     const [tenYearMinusTwoOptions, setTenYearMinusTwoOptions] = useState({
+
         chart: {
             zoomType: 'x',
             type: 'area'
@@ -155,30 +167,7 @@ export default function Bonds()
             enabled: false
         },
         plotOptions: {
-            area: {
-                fillColor: {
-                    linearGradient: {
-                        x1: 0,
-                        y1: 0,
-                        x2: 0,
-                        y2: 1
-                    },
-                    stops: [
-                        [0, Highcharts.getOptions().colors[0]],
-                        [1, Highcharts.color(Highcharts.getOptions().colors[0]).setOpacity(0).get('rgba')]
-                    ]
-                },
-                marker: {
-                    radius: 2
-                },
-                lineWidth: 1,
-                states: {
-                    hover: {
-                        lineWidth: 1
-                    }
-                },
-                threshold: null
-            }
+
         },
         series: [{
             type: 'area',
@@ -196,8 +185,9 @@ export default function Bonds()
             try {
                 setIsLoading(true);
                 const yieldCurveData = await getYieldCurveData();
+                //console.log(yieldCurveData)
                 setYieldData(yieldCurveData)
-                if (!isActive) return;//there's a bug here where the first series is missing the last data point
+                if (!isActive) return;
                 setYieldCurveOptions(prevOptions => {
                     let seriesData_1 = yieldCurveData.slice(0, 9).reverse().map(item => item.lastBondYield); //recent month
                     let seriesData_2 = yieldCurveData.slice(9, 18).reverse().map(item => item.lastBondYield); //prev month
@@ -205,19 +195,19 @@ export default function Bonds()
                     let seriesData_4 = yieldCurveData.slice(480, 489).reverse().map(item => item.lastBondYield); //5 year
                     let series_1 = {
                         data: seriesData_1,
-                        name: `${months[yieldCurveData[0].month]} ${yieldCurveData[0].year}`
+                        name: `${months[yieldCurveData[0].month + 1]} ${yieldCurveData[0].year}`
                     };
                     let series_2 = {
                         data: seriesData_2,
-                        name: `${months[yieldCurveData[9].month]} ${yieldCurveData[9].year}`
+                        name: `${months[yieldCurveData[9].month + 1]} ${yieldCurveData[9].year}`
                     };
                     let series_3 = {
                         data: seriesData_3,
-                        name: `${months[yieldCurveData[108].month]} ${yieldCurveData[108].year}`
+                        name: `${months[yieldCurveData[108].month + 1]} ${yieldCurveData[108].year}`
                     };
                     let series_4 = {
                         data: seriesData_4,
-                        name: `${months[yieldCurveData[540].month]} ${yieldCurveData[540].year}`
+                        name: `${months[yieldCurveData[540].month + 1]} ${yieldCurveData[540].year}`
                     };
                     return {
                         ...prevOptions,
@@ -253,7 +243,6 @@ export default function Bonds()
 
 
     const dataHandle = () => {
-
         console.log(yieldData);
     }
 
@@ -269,9 +258,31 @@ export default function Bonds()
     }
 
     const handleAddSeries = (date) => { //To add a series for a month
-        const newOptions = {...yieldCurveOptions}
+        //const newOptions = {...yieldCurveOptions}
         setSelectedDate(date)
-        console.log(date);
+
+        const dateTest = new Date(date);
+        console.log("Month: " + dateTest.getMonth() + "  , Year: " + dateTest.getFullYear())
+        const filteredYieldCurve = yieldData.filter((yieldRate) => yieldRate.year === dateTest.getFullYear() &&
+            yieldRate.month === dateTest.getMonth() + 1)
+
+        console.log(filteredYieldCurve);
+
+        let newSeries = {
+            data: [],
+            name: `${months[filteredYieldCurve[0].month]} ${filteredYieldCurve[0].year}`
+        };
+        filteredYieldCurve.reverse().map((yieldRate) => {
+            newSeries.data.push(yieldRate.lastBondYield);
+        })
+
+        setYieldCurveOptions(prevOptions => {
+            return{
+                ...prevOptions,
+                series: [...prevOptions.series, newSeries]
+            }
+        });
+
     };
 
     const handleRemoveSeries = (seriesName) => {
@@ -376,7 +387,6 @@ export default function Bonds()
                                     })}
                                 </div>
                             </div>
-                            <label className='btn btn-sm' onClick={dataHandle}>Test</label>
                         </div>
 
                     </div>

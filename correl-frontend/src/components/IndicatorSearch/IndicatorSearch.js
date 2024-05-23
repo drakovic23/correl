@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import SplineChart from "@/components/IndicatorCharts/SplineChart";
 
 const getSelectedSearchData = async (id) => {
-    const response = await fetch(`http://localhost:5289/api/indicators/${id}`);
+    const response = await fetch(`https://correl-dotnet.azurewebsites.net/api/indicators/${id}`);
     const data = await response.json();
     //console.log(data);
     return data;
@@ -49,7 +49,7 @@ export default function IndicatorSearch() {
     const fetchSuggestions = async (term) => {
         const response = await fetch(`/indicators/api?query=${term}`);
         const data = await response.json();
-        //console.log(data.filteredIndicators);
+
         setSuggestions(data.filteredIndicators);
     };
 
@@ -67,11 +67,8 @@ export default function IndicatorSearch() {
         setSearchTerm(indicator.eventName);
         setSuggestions([]);
         // Fetch detailed data for the selected indicator
-        //const response = await fetch(`/api/indicators/${encodeURIComponent(indicator)}`);
-        //const data = await response.json();
-        //console.log(indicator);
+
         const indicatorData = await getSelectedSearchData(indicator.id);
-        console.log("Calling API for indicator id: " + indicator.id);
 
         let chartOptions= structuredClone(chartTemplate);
 
@@ -81,21 +78,14 @@ export default function IndicatorSearch() {
         })
         chartOptions.title.text = indicator.eventName;
         chartOptions.series[0].name = indicator.eventName;
-        console.log("setting chart title to: " + indicator.eventName);
-        console.log(chartOptions);
 
         setChartData(chartOptions);
-        //setSelectedIndicator(indicator);
-        //Handle the selected indicator
-        //Display chart or table?
-
-
     };
 
     return (
         <div>
             <label className="input input-bordered flex items-center gap-2">
-                <input onChange={handleSearchChange} value={searchTerm} type="text" className="grow" placeholder="Search" autoComplete="off"/>
+                <input onChange={handleSearchChange} value={searchTerm} type="text" className="grow" placeholder="Search for an indicator" autoComplete="off"/>
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor"
                      className="w-4 h-4 opacity-70">
                     <path fillRule="evenodd"
@@ -123,7 +113,6 @@ export default function IndicatorSearch() {
                         <div className="card-body">
                     <SplineChart
                         chartOptions={chartData}
-                        allowChartUpdate={true}
                     />
                         </div>
                     </div>

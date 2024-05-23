@@ -53,8 +53,8 @@ public class YieldCurveService
             
                 // Set cache options
                 var cacheEntryOptions = new MemoryCacheEntryOptions()
-                    .SetSlidingExpiration(TimeSpan.FromHours(12)) // Cache for 12 hrs
-                    .SetAbsoluteExpiration(TimeSpan.FromHours(24)); // Ensure cache is refreshed at least every 24 hours
+                    .SetSlidingExpiration(TimeSpan.FromHours(4))
+                    .SetAbsoluteExpiration(TimeSpan.FromHours(24));
 
                 // Save data in cache
                 _cache.Set(cacheKey, bondRatesByMonth, cacheEntryOptions);
