@@ -13,8 +13,8 @@ export default function FreqTable({freqData})
                 </tr>
                 </thead>
                 <tbody>
-                {freqData.map(point => (
-                    <tr key={point.freq}>
+                {freqData.map((point, i) => (
+                    <tr key={i}>
                         <td>{point.binName}</td>
                         <td>{point.freq}</td>
                         <td>{point.probability.toFixed(2) + '%'}</td>

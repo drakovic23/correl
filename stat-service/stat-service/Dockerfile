@@ -10,11 +10,6 @@ ENV PYTHONDONTWRITEBYTECODE=1
 # the application crashes without emitting any logs due to buffering.
 ENV PYTHONUNBUFFERED=1
 
-# SQL Environment variables
-ENV correl_pw=
-ENV correl_un=
-ENV correl_server=
-
 WORKDIR /app
 
 # Linux Pakcages

@@ -2,7 +2,7 @@
 
 import {startTransition, useEffect, useState, useTransition} from "react";
 import {useRouter, useSearchParams } from "next/navigation";
-import Loading from "@/app/loading";
+import InfinityLoader from "@/components/InfinityLoader/InfinityLoader";
 
 export default function TickerSearch({initialSymbol})
 {
@@ -31,10 +31,10 @@ export default function TickerSearch({initialSymbol})
             <label className="input input-bordered flex items-center gap-2 w-1/4 my-2">
                 <input
                     type="text"
-                    value={symbol}
+                    value={symbol || ""}
                     onChange={(e) => setSymbol(e.target.value)}
                     className="grow"
-                    placeholder="Enter a Yahoo Finance Ticker"
+                    placeholder="Enter a Yahoo Finance Symbol"
                 />
                 <button className="btn btn-xs bg-gray-200" type="submit" disabled={isPending || isLoading}>Search</button>
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor"
@@ -43,7 +43,7 @@ export default function TickerSearch({initialSymbol})
                           d="M9.965 11.026a5 5 0 1 1 1.06-1.06l2.755 2.754a.75.75 0 1 1-1.06 1.06l-2.755-2.754ZM10.5 7a3.5 3.5 0 1 1-7 0 3.5 3.5 0 0 1 7 0Z"
                           clipRule="evenodd"/>
                 </svg>
-                {(isPending || isLoading) && <Loading/>}
+                {(isPending || isLoading) && <InfinityLoader/>}
             </label>
         </form>
 

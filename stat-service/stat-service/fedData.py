@@ -13,7 +13,7 @@ driver = '{ODBC Driver 17 for SQL Server}'
 connectionString = ('DRIVER=' + driver + ';PORT=1433;SERVER=' + server + ';PORT=1443;DATABASE=' + database +
                     ';UID=' + username + ';PWD=' + password)
 
-fred = Fred(api_key='e0fc642229e9e568dd8d5ec2f18868a5')
+fred = Fred(api_key='')
 
 
 # Inserts ALL bond data for specified series and specified bond id in bond_types table

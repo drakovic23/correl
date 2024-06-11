@@ -1,7 +1,10 @@
+import {redirect} from 'next/navigation'
+
 export default function Home()
 {
+    redirect("/stats")
     return (
 
-        <p>Dashboard</p>
+        <p>Not implemented</p>
     )
 }

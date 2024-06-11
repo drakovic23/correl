@@ -6,7 +6,7 @@ import HighchartsExporting from "highcharts/modules/exporting";
 import React, {useEffect, useState} from 'react';
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import Loading from "@/app/loading";
+import InfinityLoader from "@/components/InfinityLoader/InfinityLoader";
 
 //TODO: Change the fetch to do it server side
 async function getYieldCurveData() {
@@ -361,7 +361,7 @@ export default function Bonds()
                         <div className="card-body p-2">
 
                                 { /* This doesn't actually work */
-                                    isLoading ? <Loading/> : <HighchartsReact
+                                    isLoading ? <InfinityLoader/> : <HighchartsReact
                                     highcharts={Highcharts}
                                 options={yieldCurveOptions}
                                 allowChartUpdate={true}/>

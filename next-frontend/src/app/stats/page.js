@@ -1,9 +1,9 @@
 import HistogramChart from "@/components/StatCharts/HistogramChart";
 import GeneralChartProvider from "@/components/GeneralChartProvider/GeneralChartProvider";
-import WarningAlert from "@/components/WarningAlert/WarningAlert";
 import {getGeneralStats, getTickerData} from "@/app/actions";
 import TickerSearch from "@/components/TickerSearch/TickerSearch";
 import FreqTable from "@/components/Tables/FreqTable";
+import ErrorAlert from "@/components/ErrorAlert/ErrorAlert";
 
 function setHistogramOptions(data, symbol)
 {
@@ -85,7 +85,7 @@ function setTickerChartOptions(data, symbol)
     const chartOptions =
         {
             rangeSelector: {
-                selected: 4,
+                selected: 3,
             },
             title: {
                 text: symbol + ' Daily Close Price'
@@ -110,14 +110,40 @@ function setTickerChartOptions(data, symbol)
 
     return chartOptions;
 }
+
 export default async function Stats({searchParams})
 {
-    const defaultSymbol = "^GSPC";
-    const symbol = searchParams.symbol || defaultSymbol;
-    const dailyStats = await getGeneralStats(symbol);
-    const dailyHistoricalClose = await getTickerData(symbol);
-    const histogramChartOptions = setHistogramOptions(dailyStats.initialHistogram, symbol)
-    const spxHistoricalChartOptions = setTickerChartOptions(dailyHistoricalClose, symbol);
+    const defaultSymbol = "^GSPC"; //Our default symbol is ^GSPC
+    const symbol = searchParams.symbol || defaultSymbol; //If there's no symbol passed to searchParams use default
+    //const dailyStats = await getGeneralStats(symbol);
+    //const dailyHistoricalClose = await getTickerData(symbol);
+    let error = null;
+    const fetchData = async (symbolToFetch) => {
+      const dailyStats = await getGeneralStats(symbolToFetch);
+      const dailyHistoricalClose = await getTickerData(symbolToFetch);
+      return {dailyStats, dailyHistoricalClose}
+    };
+
+    let data;
+    try
+    {
+        data = await fetchData(symbol);
+    }catch(err)
+    {
+        error = true;
+        try{
+            data = await fetchData(defaultSymbol); //fallback symbol
+        }catch(err){
+            return(
+                <p>Error has occurred loading default symbol :(</p>
+            )
+        }
+    }
+
+
+    const {dailyStats, dailyHistoricalClose} = data;
+    const histogramChartOptions = setHistogramOptions(dailyStats.initialHistogram, error ? defaultSymbol : symbol);
+    const spxHistoricalChartOptions = setTickerChartOptions(dailyHistoricalClose, error ? defaultSymbol : symbol);
     const mean = parseFloat(dailyStats.initialDescriptive.mean);
     const stdDev = parseFloat(dailyStats.initialDescriptive.std);
 
@@ -133,21 +159,21 @@ export default async function Stats({searchParams})
         '1.0% to 1.5%',
         '1.5% to 2.0%',
         '>= 2.0%'
-    ]
-    let freqTableData = []
+    ];
+    let freqTableData = [];
 
 
-    dailyStats.initialHistogram.forEach((point,i) => {
+    dailyStats.initialHistogram.forEach((point,i) =>
+    {
        let newObj = {
            binName: "",
-           freq: 0,
-           probability: 0.00,
+           freq: point.counts,
+           probability: parseFloat((point.counts / dailyStats.initialDescriptive.count) * 100),
            cumulativeProb: 0.00
        }
 
        newObj.binName = binNames[i];
        newObj.freq = point.counts;
-       newObj.probability = parseFloat((point.counts / dailyStats.initialDescriptive.count) * 100);
        if(i !== 0)
        {
            let cumulative = 0;
@@ -166,9 +192,6 @@ export default async function Stats({searchParams})
        freqTableData.push(newObj);
     });
 
-    //Return info
-
-
     //std dev calcs
     const stdDevUpper= [((mean + (stdDev)) * 100).toFixed(2),
         ( (mean + (2 * stdDev)) * 100).toFixed(2),
@@ -179,13 +202,13 @@ export default async function Stats({searchParams})
         ( (mean - (3 * stdDev)) * 100 ).toFixed(2)
     ];
 
-    //console.log(dailyStats)
     return(
-        <div className="">
-            <WarningAlert/>
 
+        <div className="px-6">
             <TickerSearch/>
-
+            {error ? <ErrorAlert
+            text="Invalid symbol, enter a valid symbol"
+            /> : ""}
             <div className="flex flex-grow">
                 <div className="card shadow-md bg-base-100 rounded w-full">
                     <div className="card-body p-2">
@@ -287,39 +310,12 @@ export default async function Stats({searchParams})
                     </div>
                 </div>
 
-                <div className="card shadow-md bg-base-100 rounded text-center items-center">
-                    <div className="card-body rounded p-2">
-                        <div className="overflow-x-auto">
-                            <div className="table table-xs">
-                                <table>
-                                    <thead>
-                                    <tr>
-                                        <th>
-                                            YTD
-                                        </th>
-                                        <th>
-                                            12M
-                                        </th>
-                                        <th>
-                                            6M
-                                        </th>
-                                        <th>
-                                            3M
-                                        </th>
-                                        <th>
-                                            1M
-                                        </th>
-                                    </tr>
-                                    </thead>
-                                </table>
-                            </div>
-                        </div>
+                <div className="card shadow-md bg-base-100 rounded text-center items-center flex grow">
+                    <div className="card-body rounded p-2 grow">
+                        <h1 className="font-semibold">Current Price</h1>
+                        <hr/>
                     </div>
                 </div>
-
-
-
-
             </div>
         </div>
     )

@@ -4,7 +4,7 @@ using Microsoft.Extensions.Caching.Memory;
 
 namespace correl_backend.Models;
 
-public class GeneralInitialStats
+public class GeneralStats
 {
     public List<GeneralStat> InitialGeneralStats { get; set; } = new();
     public List<Histogram> InitialHistogram { get; set; } = new();
@@ -26,13 +26,13 @@ public class GeneralStatsService
         _externalApiService = externalApiService;
     }
 
-    public GeneralInitialStats GetInitialStats()
+    public GeneralStats GetInitialStats() //This was used for the initial stats on load but can now be removed
     {
         var cacheKey = "SPXInitialStats";
         int tickerId = 1;
-        if (!_cache.TryGetValue(cacheKey, out GeneralInitialStats initialStats))
+        if (!_cache.TryGetValue(cacheKey, out GeneralStats? initialStats))
         {
-            initialStats = new GeneralInitialStats();
+            initialStats = new GeneralStats();
             initialStats.InitialDescriptive = _context.DescriptiveStats
                 .FirstOrDefault(i => i.TickerId == tickerId) ?? throw new InvalidOperationException();
             
@@ -51,15 +51,15 @@ public class GeneralStatsService
             _cache.Set(cacheKey, initialStats, cacheOptions);
         }
 
-        return initialStats;
+        return initialStats ?? new GeneralStats();
     }
 
-    public async Task<GeneralInitialStats> GetGeneralStats(string ticker)
+    public async Task<GeneralStats> GetGeneralStats(string ticker)
     {   
         var cacheKey = ticker + "_GeneralStats";
         
         //Possibly just query the db initially instead idk
-        if (!_cache.TryGetValue(cacheKey, out GeneralInitialStats generalStats))
+        if (!_cache.TryGetValue(cacheKey, out GeneralStats? generalStats))
         {
             //If it's not cached we need new calculations
             var resp = await _externalApiService.GetExternalApiStatusAsync("https://correl-fl.azurewebsites.net/stats/general/" + ticker);
@@ -70,7 +70,7 @@ public class GeneralStatsService
                 //Query DB and create our return
                 //Console.WriteLine("Ticker Id is: " + id);
 
-                generalStats = new GeneralInitialStats();
+                generalStats = new GeneralStats();
                 generalStats.InitialGeneralStats = _context.GeneralStats
                     .Where((g) => g.TickerId == id)
                     .ToList();
@@ -84,7 +84,7 @@ public class GeneralStatsService
             }
             else
             {
-                throw new Exception("Symbol doesn't exist or error with Flask Service");
+                throw new HttpRequestException("Symbol doesn't exist");
             }
             
             
@@ -95,6 +95,6 @@ public class GeneralStatsService
             _cache.Set(cacheKey, generalStats, cacheOptions);
         }
 
-        return generalStats;
+        return generalStats ?? new GeneralStats();
     }
 }
