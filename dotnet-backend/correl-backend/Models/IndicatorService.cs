@@ -1,4 +1,5 @@
 using correl_backend.Context;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 
 namespace correl_backend.Models;
@@ -12,19 +13,19 @@ public class IndicatorService
         _context = context;
     }
 
-    public List<IndicatorValue> GetIndicator(int id)
+    public async Task<List<IndicatorValue>> GetIndicator(int id)
     {
-        var ret = _context.IndicatorValues
+        var ret = await _context.IndicatorValues
             .Where((i) => i.IndicatorId == id)
-            .ToList();
+            .ToListAsync();
         
         return ret;
     }
 
-    public List<Indicator> GetIndicatorNames()
+    public async Task<List<Indicator>> GetIndicatorNames()
     {
-        var ret = _context.Indicators
-            .ToList();
+        var ret = await _context.Indicators
+            .ToListAsync();
 
         return ret;
     }

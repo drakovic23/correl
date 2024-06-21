@@ -10,8 +10,6 @@ builder.Services.AddScoped<YieldCurveService>();
 builder.Services.AddScoped<IndicatorService>();
 builder.Services.AddScoped<YahooFinanceService>();
 builder.Services.AddHttpClient();
-builder.Services.AddTransient<ExternalApiService>(); // this specifies that a new instance is created each time!
-builder.Services.AddScoped<GeneralStatsService>();
 
 var app = builder.Build();
 app.UseCors(builder => builder.AllowAnyOrigin());

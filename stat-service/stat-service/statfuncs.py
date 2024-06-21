@@ -1,10 +1,11 @@
-from datetime import datetime
 import numpy as np
 import pyodbc
 import yfinance as yf
 import pandas as pd
 import os
-from yahooquery import Ticker
+import generalStatModel
+import json
+
 
 # pd.set_option('display.max_columns', None)
 # pd.set_option('display.max_rows', None)
@@ -65,6 +66,7 @@ def calc_daily_returns(data: pd.DataFrame):
     return data
 
 
+# Experimental quad analysis, not used
 def quad_ism_vs_sp500(month_lag: int = 6):
     sp500 = get_all_ticker_data('^GSPC', "1mo")
     sp500 = calc_quarterly_returns(sp500)
@@ -117,12 +119,10 @@ def quad_ism_vs_sp500(month_lag: int = 6):
     # merged_df.to_csv('merged_df_analysis.csv')
 
 
-# lag_var is used to indicate whether to lag the given var or sp500
-# Should probably remove the default initialization here
+# This is experimental, not used
 def calc_var_sp_correlation(var: pd.DataFrame, month_lag: int = 6, lag_var: bool = False, var_y: pd.DataFrame =
-    get_all_ticker_data("^GSPC", "1mo")):
+get_all_ticker_data("^GSPC", "1mo")):
     # Get all ticker data
-    # sp500 = get_all_ticker_data('^GSPC', "1mo")
     var_y_cp = var_y.copy()
     var_y_cp = calc_quarterly_returns(var_y_cp)
     var_x = var.copy()
@@ -135,7 +135,7 @@ def calc_var_sp_correlation(var: pd.DataFrame, month_lag: int = 6, lag_var: bool
     var_y_cp['Date'] = pd.to_datetime(var_y_cp['Date']).dt.tz_localize(None)
 
     # Lag either our var_x or our var_y
-    if lag_var == False:
+    if not lag_var:
         var_y_cp['Date'] = var_y_cp['Date'] - pd.DateOffset(months=month_lag)
     else:
         var_x['Date'] = var_x['Date'] - pd.DateOffset(months=month_lag)
@@ -146,7 +146,6 @@ def calc_var_sp_correlation(var: pd.DataFrame, month_lag: int = 6, lag_var: bool
     max_date = var_x['Date'].max()
     var_y_cp = var_y_cp[(var_y_cp['Date'] >= min_date) & (var_y_cp['Date'] <= max_date)]
 
-    #TODO: Test without this
     var_y_cp.sort_values(by='Date', inplace=True)
     var_x.sort_values(by='Date', inplace=True)
 
@@ -157,10 +156,11 @@ def calc_var_sp_correlation(var: pd.DataFrame, month_lag: int = 6, lag_var: bool
 
     # Save and print the result
     # merged_df.to_csv('merged_df.csv')
-    # print(f'Correlation between given var_x and var_y returns: {corr} with total month lag of: {month_lag}')
+    # print(f'Correlation between given var_x and var_y returns: {corr} with total month lag of: {month_lag})
     return corr
 
 
+# Calculates histogram points/counts for common bins used for daily returns
 def calc_histogram_values(data, is_daily: bool = True):
     if is_daily:
         data = calc_daily_returns(data)
@@ -179,6 +179,7 @@ def calc_histogram_values(data, is_daily: bool = True):
     return hist_values
 
 
+# For basic descriptive stats
 def calc_descriptive_stats(data: pd.DataFrame, is_daily: bool = True):
     if is_daily:
         data = calc_daily_returns(data)
@@ -253,6 +254,7 @@ def insert_general_stats():
     cnxn.close()
 
 
+# Calculates the average true range of a OHLC dataset
 def calc_atr(data: pd.DataFrame, n: int = 5):
     previous_close = data['Close'].shift(1)
     tr1 = data['High'] - data['Low']
@@ -266,6 +268,7 @@ def calc_atr(data: pd.DataFrame, n: int = 5):
     return data
 
 
+# Calculates the true range of a OHLC dataset
 def calc_tr(data: pd.DataFrame):
     previous_close = data['Close'].shift(1)
     tr1 = data['High'] - data['Low']
@@ -306,50 +309,29 @@ def calc_general_atr(data: pd.DataFrame):
 
     return ret_obj
 
-
-def insert_ticker_stats(ticker):
-    cnxn = get_connection()
-    cursor = cnxn.cursor()
+def get_general_stats(ticker):
     try:
-        ticker_daily = get_all_ticker_data(ticker)  # TODO: Add a try here
+        ticker_daily = get_all_ticker_data(ticker)
     except Exception as e:
         raise e
 
     ticker_daily_descriptive = calc_descriptive_stats(ticker_daily)
+    descriptive = generalStatModel.DescriptiveStats(ticker_daily_descriptive['count'], ticker_daily_descriptive['mean'],
+                                                    ticker_daily_descriptive['std'], ticker_daily_descriptive['min'],
+                                                    ticker_daily_descriptive['max'], ticker_daily_descriptive['25%'],
+                                                    ticker_daily_descriptive['50%'], ticker_daily_descriptive['75%'])
 
-    ticker_id = get_ticker_id(ticker)
-    if ticker_id == -1:  # If the ticker doesn't exist we need to insert
-        cursor.execute("INSERT INTO TICKERS VALUES(?)", ticker)
-        cursor.commit()
-        ticker_id = get_ticker_id(ticker)
+    ticker_daily_histo = calc_histogram_values(ticker_daily)
+    histogram = list()
+    for i in ticker_daily_histo:
+        histogram.append(generalStatModel.HistogramPoint(
+            i[0], None if i[1] == float('inf') or i[1] == -float('inf') else i[1]))
 
-    # Insert descriptive stats
-    cursor.execute("DELETE FROM DESCRIPTIVE_STATS WHERE TickerId = ?", ticker_id)
-    cursor.execute("INSERT INTO DESCRIPTIVE_STATS VALUES(?,?,?,?,?,?,?,?,?)", ticker_id,
-                   ticker_daily_descriptive['count'], ticker_daily_descriptive['mean'], ticker_daily_descriptive['std'],
-                   ticker_daily_descriptive['min'], ticker_daily_descriptive['max'], ticker_daily_descriptive['25%'],
-                   ticker_daily_descriptive['50%'], ticker_daily_descriptive['75%'])
-    # Insert histogram values
-    ticker_daily_hist = calc_histogram_values(ticker_daily)
-    cursor.execute("DELETE FROM HISTOGRAM WHERE TickerId = ?", ticker_id)
-    for i in ticker_daily_hist:
-        cursor.execute("INSERT INTO HISTOGRAM VALUES(?,?,?)", ticker_id,
-                       i[0], None if i[1] == float('inf') or i[1] == -float('inf') else i[1])
-
-    # Insert ATR
     ticker_atr = calc_general_atr(ticker_daily)
-    cursor.execute("DELETE FROM GENERAL_STATS WHERE TickerId = ? AND IndicatorId is NULL", ticker_id)
+    atr_vals = list()
     for i in ticker_atr:
-        cursor.execute("INSERT INTO GENERAL_STATS (TickerId, Name, Value, RollingDuration) VALUES(?,?,?,?)", ticker_id
-                       , str(i[0]) + " Day Rolling ATR", i[1], i[0])
+        atr_vals.append(generalStatModel.GeneralStat(str(i[0]) + " Day Rolling ATR", round(i[1], 2), i[0]))
 
-    cursor.commit()
-    cursor.close()
+    ret = generalStatModel.GeneralStats(atr_vals, histogram, descriptive)
 
-    return ticker_id
-
-# insert_general_stats() - this should be called daily
-# print(calc_histogram_values(get_all_ticker_data("^GSPC")))
-# insert_general_stats()
-
-mf_symbols
+    return json.dumps(ret, default=lambda o: o.encode())

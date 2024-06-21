@@ -23,11 +23,11 @@ public class YieldCurveService
         _cache = cache;
     }
 
-    public List<YieldCurveSummary> GetYieldCurveSummary()
+    public async Task<List<YieldCurveSummary>> GetYieldCurveSummary()
     {
         var cacheKey = "YieldCurveSummary";
         
-        if (!_cache.TryGetValue(cacheKey, out List<YieldCurveSummary> bondRatesByMonth))
+        if (!_cache.TryGetValue(cacheKey, out Task<List<YieldCurveSummary>> bondRatesByMonth))
         {
             bondRatesByMonth = _context.BondRates
                 .Where(br => br.ConstantDate >= DateOnly.FromDateTime(new DateTime(1985,1,1,0,0,0)))
@@ -48,7 +48,7 @@ public class YieldCurveService
                 })
                 .OrderByDescending(x => x.ClosestDayToEndOfMonth)
                 .ThenBy(x => x.TypeId)
-                .ToList();
+                .ToListAsync();
                 
             
                 // Set cache options
@@ -57,10 +57,10 @@ public class YieldCurveService
                     .SetAbsoluteExpiration(TimeSpan.FromHours(24));
 
                 // Save data in cache
-                _cache.Set(cacheKey, bondRatesByMonth, cacheEntryOptions);
+                await _cache.Set(cacheKey, bondRatesByMonth, cacheEntryOptions);
         }
 
-        return bondRatesByMonth;
+        return await bondRatesByMonth;
     }
 }
 

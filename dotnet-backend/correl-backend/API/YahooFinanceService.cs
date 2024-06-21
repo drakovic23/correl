@@ -50,8 +50,8 @@ public class YahooFinanceService
             
             //Set cache options
             var cacheOptions = new MemoryCacheEntryOptions()
-                .SetSlidingExpiration(TimeSpan.FromHours(4))
-                .SetAbsoluteExpiration(TimeSpan.FromHours(8));
+                .SetSlidingExpiration(TimeSpan.FromHours(1))
+                .SetAbsoluteExpiration(TimeSpan.FromHours(2));
 
             _cache.Set(cacheKey, ret, cacheOptions);
         }

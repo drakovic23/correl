@@ -10,16 +10,13 @@ namespace correl_backend.API;
 
 public class EndPoints
 {
-    //TODO: Log exceptions
-    //TODO: Handle specific SQL Exception
-    //TODO: Implement using in db context to allow async calls to DB
     public static void Map(WebApplication app)
     {
         app.MapGet("/api/indicators/{id}", async (IndicatorService indicatorService, int id) =>
         {
             try
             {
-                var ret = indicatorService.GetIndicator(id);
+                var ret = await indicatorService.GetIndicator(id);
                 return Results.Ok(ret);
             }
             catch (Exception ex)
@@ -32,7 +29,7 @@ public class EndPoints
         {
             try
             {
-                var ret = indicatorService.GetIndicatorNames();
+                var ret = await indicatorService.GetIndicatorNames();
                 return Results.Ok(ret);
             }
             catch (Exception ex)
@@ -51,7 +48,7 @@ public class EndPoints
         {
             try
             {
-                var ret = yieldCurveService.GetYieldCurveSummary();
+                var ret = await yieldCurveService.GetYieldCurveSummary();
                 return Results.Ok(ret);
             }
             catch (Exception ex)
@@ -66,24 +63,6 @@ public class EndPoints
             {
                 var ret = await yahooFinanceService.GetHistoricalClose(ticker);
                 return Results.Ok(ret);
-            }
-            catch (Exception ex)
-            {
-                return Results.StatusCode(500);
-            }
-        });
-        
-        app.MapGet("/api/stats/general/{ticker}", async (GeneralStatsService generalStatsService, string ticker) =>
-        {
-            //return await generalStatsService.GetGeneralStats(ticker);
-            try
-            {
-                var ret = await generalStatsService.GetGeneralStats(ticker);
-                return Results.Ok(ret);
-            }
-            catch (HttpRequestException ex)
-            {
-                return Results.BadRequest();
             }
             catch (Exception ex)
             {

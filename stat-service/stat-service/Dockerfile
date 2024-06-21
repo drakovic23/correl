@@ -54,6 +54,6 @@ EXPOSE 80
 # Configure firewall to only allow traffic to dotnet-api
 
 # Run the application.
-ENTRYPOINT ["gunicorn", "app:app"]
+ENTRYPOINT ["gunicorn", "wsgi:app"]
 
 
