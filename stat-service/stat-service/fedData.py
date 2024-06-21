@@ -92,7 +92,6 @@ def get_most_recent_bond_date():
 
 
 def insert_latest_bond_data(date_since: datetime = get_most_recent_bond_date()):  # TODO: Needs to be scheduled
-    # given_date_formatted = datetime.datetime.strptime(date_since, "%Y-%m-%d")
     date_day_added = date_since + datetime.timedelta(days=1)  # Add one day since get_series returns data where >= date
 
     for i in bond_id_to_series:

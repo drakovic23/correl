@@ -11,4 +11,6 @@ bind = "0.0.0.0:80"
 workers = (multiprocessing.cpu_count() * 2) + 1
 threads = workers
 
+preload_app = True
+
 timeout = 120

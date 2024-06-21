@@ -17,5 +17,4 @@ app.UseCors(builder => builder.AllowAnyOrigin());
 EndPoints.Map(app); //maps endpoints in EndPoints class
 
 app.Urls.Add("http://0.0.0.0:80");
-//app.Urls.Add("https://*:443");
 app.Run();

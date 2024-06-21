@@ -2,6 +2,7 @@ from flask import Flask, jsonify, Request, Response, request, redirect, send_fro
 from statfuncs import (get_all_ticker_data, calc_atr_specified,
                        calc_descriptive_stats, calc_general_atr, get_general_stats)
 from flask_caching import Cache
+import scheduler
 
 
 def create_app(config_name=None):
@@ -13,6 +14,7 @@ def create_app(config_name=None):
     app = Flask(__name__)
     app.config.from_mapping(config)
     cache = Cache(app)
+
     @app.route("/stats/atr/<ticker>/<n>", methods=["GET"])
     def atr(ticker, n):
         ret = [calc_atr_specified(get_all_ticker_data(ticker), n)]
@@ -58,4 +60,5 @@ def create_app(config_name=None):
 
 if __name__ == '__main__':
     app = create_app()
+    scheduler.start_scheduler()
     app.run()

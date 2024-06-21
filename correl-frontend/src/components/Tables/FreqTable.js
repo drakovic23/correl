@@ -2,7 +2,7 @@ export default function FreqTable({freqData})
 {
 
     return(
-        <div className="overflow-x-auto mt-2 max-h-96">
+        <div className="overflow-x-auto mt-2 max-h-96 self-center">
         <div className="table table-xs table-zebra text-center table-pin-cols table-pin-rows">
             <table>
                 <thead>

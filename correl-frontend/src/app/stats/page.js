@@ -333,16 +333,14 @@ export default async function Stats({searchParams})
                         />
                     </div>
                 </div>
-                <div
-                    className="card rounded bg-base-100 text-center md:col-span-2 sm:col-span-1">
-
+                <div className="card rounded bg-base-100 text-center md:col-span-2 sm:col-span-1">
                     <div className="card-body p-4 border-gray-300 border w-full">
                         <h2 className="font-semibold">Frequency Table</h2>
                         <hr/>
 
-                        <FreqTable
-                            freqData={freqTableData}
-                        />
+                            <FreqTable
+                                freqData={freqTableData}
+                            />
 
                     </div>
                 </div>
