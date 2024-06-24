@@ -6,8 +6,8 @@ import HighchartsExporting from "highcharts/modules/exporting";
 import React, {useEffect, useState} from 'react';
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
+import InfinityLoader from "@/components/InfinityLoader/InfinityLoader";
 
-//TODO: Change the fetch to do it server side
 async function getYieldCurveData() {
     const res = await fetch('https://correl-dotnet.azurewebsites.net/api/yield-curve')
 
@@ -150,7 +150,7 @@ export default function Bonds()
     });
 
     const calcTenYearDiff = (rateData) => {
-        let ret = {
+        let newSeries = {
             series: [{
                 data: [],
                 name: '', //not needed
@@ -158,21 +158,21 @@ export default function Bonds()
             }],
             xAxis: [],
         }
-        //loop through every 9
-        for (let i = 2; i < rateData.length; i += 9) {
-            if (i >= rateData.length)
-                return ret;
-            let dataPoint =
-                Math.round((rateData[i].lastBondYield - rateData[i + 3].lastBondYield + Number.EPSILON) * 100) / 100;
 
-            ret.series[0].data.push(dataPoint);
-            ret.xAxis.push(rateData[i].year);
+        let data = rateData.map((e) => e); //clone
+        let filteredData = data.filter((x) => x.typeId === 3 || x.typeId === 6);
+        filteredData.reverse();
+
+        for(let i = 0; i < filteredData.length; i += 2){
+            if(i + 1 >= filteredData.length)
+                break;
+
+            let dataPoint = Math.round((filteredData[i].lastBondYield - filteredData[i + 1].lastBondYield + Number.EPSILON) * 100) / 100;
+            newSeries.series[0].data.push(dataPoint);
+            newSeries.xAxis.push(filteredData[i].year);
         }
 
-        ret.series[0].data = ret.series[0].data.reverse();
-        ret.xAxis = ret.xAxis.reverse();
-
-        return ret;
+        return newSeries;
     }
 
     useEffect(() => {
@@ -181,15 +181,17 @@ export default function Bonds()
             try {
                 setIsLoading(true);
                 const yieldCurveData = await getYieldCurveData();
+                //console.log(yieldCurveData);
                 if (!isActive) return;
                 setYieldData(yieldCurveData)
+                //console.log(yieldCurveData);
                 if (!isActive) return;
                 setYieldCurveOptions(prevOptions => { // For initial yield curve chart
-                    //Every 8 elements is approx a month
-                    let seriesData_1 = yieldCurveData.slice(0, 9).reverse().map(item => item.lastBondYield); //most recent month
-                    let seriesData_2 = yieldCurveData.slice(9, 18).reverse().map(item => item.lastBondYield); //prev month
-                    let seriesData_3 = yieldCurveData.slice(96, 105).reverse().map(item => item.lastBondYield); //1 year
-                    let seriesData_4 = yieldCurveData.slice(480, 489).reverse().map(item => item.lastBondYield); //5 year
+                    //Every 8 elements is a month
+                    let seriesData_1 = yieldCurveData.slice(0, 9).map(item => item.lastBondYield); //most recent month
+                    let seriesData_2 = yieldCurveData.slice(9, 18).map(item => item.lastBondYield); //prev month
+                    let seriesData_3 = yieldCurveData.slice(108, 117).map(item => item.lastBondYield); //1 year
+                    //let seriesData_4 = yieldCurveData.slice(216, 225).map(item => item.lastBondYield); //2year
                     let series_1 = {
                         data: seriesData_1,
                         name: `${months[yieldCurveData[0].month]} ${yieldCurveData[0].year}`,
@@ -205,14 +207,15 @@ export default function Bonds()
                         name: `${months[yieldCurveData[108].month]} ${yieldCurveData[108].year}`,
                         color: splineColors[2]
                     };
-                    let series_4 = {
+                    /*let series_4 = {
                         data: seriesData_4,
-                        name: `${months[yieldCurveData[540].month + 1]} ${yieldCurveData[540].year}`,
+                        name: `${months[yieldCurveData[540].month]} ${yieldCurveData[540].year}`,
                         color: splineColors[3]
-                    };
+                    };*/
+
                     return {
                         ...prevOptions,
-                        series: [series_1, series_2, series_3, series_4, ...prevOptions.series] // prepend
+                        series: [series_1, series_2, series_3, ...prevOptions.series] // prepend
                     };
                 });
 
@@ -257,7 +260,7 @@ export default function Bonds()
             name: `${months[filteredYieldCurve[0].month]} ${filteredYieldCurve[0].year}`,
             color: yieldCurveOptions.series.length < 10 ? splineColors[yieldCurveOptions.series.length + 1] : "#73462a"
         };
-        filteredYieldCurve.reverse().map((yieldRate) => {
+        filteredYieldCurve.map((yieldRate) => {
             newSeries.data.push(yieldRate.lastBondYield);
         })
 
@@ -270,15 +273,21 @@ export default function Bonds()
 
     };
 
+    const convertDate = (date) =>
+    {
+        return new Date(date);
+    }
+
+
 
     const handleRemoveSeries = (seriesName) => {
+        //e.preventDefault();
         setYieldCurveOptions(prevOptions => ({
             ...prevOptions,
             series: prevOptions.series.filter(_ => _.name !== seriesName)
         }));
     }
 
-    //TODO: This causes an issue with the 10-2 chart
     /*if(isLoading)
     {
         return <InfinityLoader/>
@@ -290,8 +299,8 @@ export default function Bonds()
                     <div className="card shadow-md bg-base-100 w-full rounded">
                         <div className="card-body">
                             <h1 className="text-center text-sm font-bold mt-2">ICE US Corporate Index Yield</h1>
-                            <h1 className="text-center font-light mt-2 text-green-800">5.56%</h1>
-                            <h1 className="text-center font-extralight text-xs">(As of May-6-2024)</h1>
+                            <h1 className="text-center font-light mt-2 text-green-800">5.42%</h1>
+                            <h1 className="text-center font-extralight text-xs">(As of Jun-20-2024)</h1>
                         </div>
                     </div>
 
@@ -299,8 +308,8 @@ export default function Bonds()
                         <div className="card-body">
                             <h1 className="text-center text-sm font-bold mt-2">ICE AAA US Corporate Index
                                 Yield</h1>
-                            <h1 className="text-center font-light mt-2 text-green-800">5.03%</h1>
-                            <h1 className="text-center font-extralight text-xs">(As of May-6-2024)</h1>
+                            <h1 className="text-center font-light mt-2 text-green-800">4.90%</h1>
+                            <h1 className="text-center font-extralight text-xs">(As of Jun-20-2024)</h1>
                         </div>
                     </div>
 
@@ -308,8 +317,8 @@ export default function Bonds()
                         <div className="card-body">
                             <h1 className="text-center text-sm font-bold mt-2">ICE BBB US Corporate Index
                                 Yield</h1>
-                            <h1 className="text-center font-light mt-2 text-green-800">5.76%</h1>
-                            <h1 className="text-center font-extralight text-xs">(As of May-6-2024)</h1>
+                            <h1 className="text-center font-light mt-2 text-green-800">5.60%</h1>
+                            <h1 className="text-center font-extralight text-xs">(As of Jun-20-2024)</h1>
                         </div>
                     </div>
 
@@ -317,8 +326,8 @@ export default function Bonds()
                         <div className="card-body">
                             <h1 className="text-center text-sm font-bold mt-2">ICE CCC & Lower US Corporate Index
                                 Yield</h1>
-                            <h1 className="text-center font-light mt-2 text-green-800">13.61%</h1>
-                            <h1 className="text-center font-extralight text-xs">(As of May-6-2024)</h1>
+                            <h1 className="text-center font-light mt-2 text-green-800">13.671%</h1>
+                            <h1 className="text-center font-extralight text-xs">(As of Jun-20-2024)</h1>
                         </div>
                     </div>
 
@@ -347,9 +356,10 @@ export default function Bonds()
                                 <div className="ml-4 flex gap-1.5">
                                     {yieldCurveOptions.series.map((series) => {
                                         return <label key={series.name} className="btn btn-sm"
-                                                      onClick={() => handleRemoveSeries(series.name)}>{series.name}
+                                                      onClick={() => handleRemoveSeries(series.name)}>
+                                            {series.name}
                                             <h1 className="ml[-1]text-lg text-red-500">X</h1>
-                                                </label>
+                                        </label>
                                     })}
                                 </div>
                             </div>
