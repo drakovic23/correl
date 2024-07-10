@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 ARG PYTHON_VERSION=3.10
-FROM python:${PYTHON_VERSION}-slim as base
+FROM python:${PYTHON_VERSION}-slim AS base
 
 # Prevents Python from writing pyc files.
 ENV PYTHONDONTWRITEBYTECODE=1
@@ -9,11 +9,12 @@ ENV PYTHONDONTWRITEBYTECODE=1
 # the application crashes without emitting any logs due to buffering.
 ENV PYTHONUNBUFFERED=1
 
+
 WORKDIR /app
 
 # Linux Pakcages
 RUN apt-get update && apt-get install -y \
-    unixodbc iptables iproute2 gnupg curl \
+    unixodbc iproute2 gnupg curl \
     && apt-get clean
 
 RUN curl https://packages.microsoft.com/keys/microsoft.asc | apt-key add - \
@@ -30,6 +31,4 @@ COPY . .
 EXPOSE 80
 
 # Run the application.
-ENTRYPOINT ["gunicorn", "wsgi:app"]
-
-
+CMD [ "python", "./app.py" ]

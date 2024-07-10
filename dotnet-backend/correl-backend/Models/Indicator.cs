@@ -13,7 +13,5 @@ public partial class Indicator
 
     public virtual Country? CountryNavigation { get; set; }
 
-    public virtual ICollection<GeneralStat> GeneralStats { get; set; } = new List<GeneralStat>();
-
     public virtual ICollection<IndicatorValue> IndicatorValues { get; set; } = new List<IndicatorValue>();
 }

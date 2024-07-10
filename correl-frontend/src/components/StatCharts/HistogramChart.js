@@ -10,12 +10,13 @@ if (typeof Highcharts === 'object') {
     HighchartsExporting(Highcharts)
 }
 
-export default function HistogramChart({chartOptions})
+export default function HistogramChart({histogramChartOptions})
 {
-    return(
+    //console.log(histogramData);
+    return( //The options property is not being passed
         <HighchartsReact
             highcharts={Highcharts}
-            options={chartOptions}
+            options={histogramChartOptions}
             allowChartUpdate={true}
         />
     )

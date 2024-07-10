@@ -181,10 +181,8 @@ export default function Bonds()
             try {
                 setIsLoading(true);
                 const yieldCurveData = await getYieldCurveData();
-                //console.log(yieldCurveData);
                 if (!isActive) return;
                 setYieldData(yieldCurveData)
-                //console.log(yieldCurveData);
                 if (!isActive) return;
                 setYieldCurveOptions(prevOptions => { // For initial yield curve chart
                     //Every 8 elements is a month
@@ -273,15 +271,7 @@ export default function Bonds()
 
     };
 
-    const convertDate = (date) =>
-    {
-        return new Date(date);
-    }
-
-
-
     const handleRemoveSeries = (seriesName) => {
-        //e.preventDefault();
         setYieldCurveOptions(prevOptions => ({
             ...prevOptions,
             series: prevOptions.series.filter(_ => _.name !== seriesName)
@@ -299,35 +289,32 @@ export default function Bonds()
                     <div className="card shadow-md bg-base-100 w-full rounded">
                         <div className="card-body">
                             <h1 className="text-center text-sm font-bold mt-2">ICE US Corporate Index Yield</h1>
-                            <h1 className="text-center font-light mt-2 text-green-800">5.42%</h1>
-                            <h1 className="text-center font-extralight text-xs">(As of Jun-20-2024)</h1>
+                            <h1 className="text-center font-light mt-2 text-green-800">5.39%</h1>
+                            <h1 className="text-center font-extralight text-xs">(As of Jul-10-2024)</h1>
                         </div>
                     </div>
 
                     <div className="card shadow-md bg-base-100 w-full rounded">
                         <div className="card-body">
-                            <h1 className="text-center text-sm font-bold mt-2">ICE AAA US Corporate Index
-                                Yield</h1>
-                            <h1 className="text-center font-light mt-2 text-green-800">4.90%</h1>
-                            <h1 className="text-center font-extralight text-xs">(As of Jun-20-2024)</h1>
+                            <h1 className="text-center text-sm font-bold mt-2">ICE AAA US Corporate Index Yield</h1>
+                            <h1 className="text-center font-light mt-2 text-green-800">4.86%</h1>
+                            <h1 className="text-center font-extralight text-xs">(As of Jul-10-2024)</h1>
                         </div>
                     </div>
 
                     <div className="card shadow-md bg-base-100 w-full rounded">
                         <div className="card-body">
-                            <h1 className="text-center text-sm font-bold mt-2">ICE BBB US Corporate Index
-                                Yield</h1>
-                            <h1 className="text-center font-light mt-2 text-green-800">5.60%</h1>
-                            <h1 className="text-center font-extralight text-xs">(As of Jun-20-2024)</h1>
+                            <h1 className="text-center text-sm font-bold mt-2">ICE BBB US Corporate Index Yield</h1>
+                            <h1 className="text-center font-light mt-2 text-green-800">5.58%</h1>
+                            <h1 className="text-center font-extralight text-xs">(As of Jul-10-2024)</h1>
                         </div>
                     </div>
 
                     <div className="card shadow-md bg-base-100 w-full rounded">
                         <div className="card-body">
-                            <h1 className="text-center text-sm font-bold mt-2">ICE CCC & Lower US Corporate Index
-                                Yield</h1>
-                            <h1 className="text-center font-light mt-2 text-green-800">13.671%</h1>
-                            <h1 className="text-center font-extralight text-xs">(As of Jun-20-2024)</h1>
+                            <h1 className="text-center text-sm font-bold mt-2">ICE CCC & Lower US Corporate Index Yield</h1>
+                            <h1 className="text-center font-light mt-2 text-green-800">13.85%</h1>
+                            <h1 className="text-center font-extralight text-xs">(As of Jul-10-2024)</h1>
                         </div>
                     </div>
 

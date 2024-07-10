@@ -16,7 +16,11 @@ bond_id_to_series = {
     6: 'DGS2',
     7: 'DGS1',
     8: 'DGS6MO',
-    9: 'DGS3MO'
+    9: 'DGS3MO',
+    10: 'BAMLC0A0CMEY',
+    11: 'BAMLC0A1CAAAEY',
+    12: 'BAMLC0A4CBBBEY',
+    13: 'BAMLH0A3HYCEY',
 }
 
 
@@ -77,8 +81,6 @@ def insert_ice_corporate_bonds(bond_id):  # Not used yet
     cnxn.close()
 
 
-# Gets the most recent date of the 10-year in our db, used to insert latest bond dates
-# Since the rates are released at the same day for each series we can just get the most recent date of any bond
 def get_most_recent_bond_date():
     cnxn = get_connection()
     cursor = cnxn.cursor()
@@ -91,9 +93,11 @@ def get_most_recent_bond_date():
         return -1
 
 
-def insert_latest_bond_data(date_since: datetime = get_most_recent_bond_date()):  # TODO: Needs to be scheduled
+def insert_latest_bond_data(date_since: datetime = get_most_recent_bond_date()):
     date_day_added = date_since + datetime.timedelta(days=1)  # Add one day since get_series returns data where >= date
-
+    current_date = datetime.datetime.today()
+    if date_day_added == current_date:
+        return
     for i in bond_id_to_series:
         data = fred.get_series(bond_id_to_series[i], observation_start=date_day_added)
         cnxn = get_connection()

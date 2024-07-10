@@ -1,4 +1,4 @@
-export default function FreqTable({freqData})
+export default function FreqTable({histogramData})
 {
 
     return(
@@ -14,12 +14,12 @@ export default function FreqTable({freqData})
                 </tr>
                 </thead>
                 <tbody>
-                {freqData.map((point, i) => (
+                {histogramData?.map((point, i) => (
                     <tr key={i}>
                         <td>{point.binName}</td>
-                        <td>{point.freq}</td>
-                        <td>{point.probability.toFixed(2) + '%'}</td>
-                        <td>{point.cumulativeProb + '%'}</td>
+                        <td>{point.frequency}</td>
+                        <td>{( point.probability * 100 ).toFixed(2) + '%'}</td>
+                        <td>{i === histogramData.length - 1 ? "100.00%" : ( point.cumulativeProbability * 100).toFixed(2) + '%'}</td>
                     </tr>
                 ))
                 }

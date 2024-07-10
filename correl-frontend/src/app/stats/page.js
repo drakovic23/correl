@@ -2,141 +2,31 @@ export const maxDuration = 60;
 
 import HistogramChart from "@/components/StatCharts/HistogramChart";
 import GeneralChartProvider from "@/components/GeneralChartProvider/GeneralChartProvider";
-import {getGeneralStats, getTickerData, getTickerNews} from "@/app/actions";
+import {getHistogramChartOptions, getStatsPageData, getTickerNews, getTickerChartOptions} from "@/app/actions";
 import TickerSearch from "@/components/TickerSearch/TickerSearch";
 import FreqTable from "@/components/Tables/FreqTable";
 import ErrorAlert from "@/components/ErrorAlert/ErrorAlert";
 import NewsTable from "@/components/Tables/NewsTable";
 
-function setHistogramOptions(data, symbol)
-{
-    const chartOptions =
-        {
-            title: {
-                text: symbol + ' Daily Returns Distribution',
-                style: {
-                    fontSize: '16px',
-                }
-            },
-            chart: {
-                type: 'column',
-                //height: 500
-            },
-            xAxis: {
-                type: 'category',
-                categories:[ //bin values
-                    '<= 2.0%',
-                    '-2.0% to -1.5%',
-                    '-1.5% to -1.0%',
-                    '1.0% to -0.5%',
-                    '-0.5% to 0.0%',
-                    '0.0% to 0.5%',
-                    '0.5% to 1.0%',
-                    '1.0% to 1.5%',
-                    '1.5% to 2.0%',
-                    '>= 2.0%'
-                ],
-                labels: {
-                    style:
-                        {
-                            fontSize:'12px',
-                            fontFamily: 'Verdana, sans-serif'
-                        }
-                }
-            },
-            yAxis: {
-                type: 'logarithmic',
-                title:
-                    {
-                        text: ''
-                    }
-
-            },
-            plotOptions: {
-                column: {
-                    pointPadding: 0,
-                    borderWidth: 2,
-                    groupPadding: 0,
-                    shadow: false
-                }
-            },
-            series: [
-                {
-                    data: [],
-                    name: 'Daily % Gain',
-                    color: '#2f72c3',
-                    colorByPoint: false,
-                    groupPadding: 0,
-                    borderColor: '#485757'
-
-                }
-            ],
-            legend: {
-                enabled: false
-            }
-        }
-
-    data.forEach((point) => {
-        chartOptions.series[0].data.push(point.counts);
-    })
-    return chartOptions;
-}
-
-function setTickerChartOptions(data, symbol)
-{
-    const chartOptions =
-        {
-            rangeSelector: {
-                selected: 3,
-            },
-            title: {
-                text: symbol + ' Daily Close'
-            },
-
-            series: [{
-                name: symbol,
-                data: [],
-                tooltip: {
-                    valueDecimals: 2
-                }
-            }],
-            yAxis: {
-                offset: 20,
-                lineWidth: 1,
-                }
-        }
-
-    data.forEach((t) => {
-        const entry = [new Date(t.date).getTime(), t.close]
-        chartOptions.series[0].data.push(entry)
-    })
-
-
-    return chartOptions;
-}
-
 export default async function Stats({searchParams})
 {
     const defaultSymbol = "^GSPC"; //Our default symbol is ^GSPC
     const symbol = searchParams.symbol || defaultSymbol; //If there's no symbol passed to searchParams use default
-    //const dailyStats = await getGeneralStats(symbol);
-    //const dailyHistoricalClose = await getTickerData(symbol);
-    let error = null;
-    const fetchData = async (symbolToFetch) => {
-      const dailyStats = await getGeneralStats(symbolToFetch);
-      const dailyHistoricalClose = await getTickerData(symbolToFetch);
-      return {dailyStats, dailyHistoricalClose}
-    };
 
-    let data;
+    let error = null;
+    const fetchStatsData = async (symbolToFetch) => {
+        return await getStatsPageData(symbolToFetch);
+    }
+
+    let statsPageData;
     try
     {
-        data = await fetchData(symbol);
+        statsPageData = await fetchStatsData(symbol);
     }catch(err)
     {
         error = true;
         try{
-            data = await fetchData(defaultSymbol); //fallback symbol
+            statsPageData = await fetchStatsData(defaultSymbol);
         }catch(err){
             return(
                 <p>Error loading default symbol :(</p>
@@ -144,57 +34,10 @@ export default async function Stats({searchParams})
         }
     }
 
-
-    const {dailyStats, dailyHistoricalClose} = data;
-    const histogramChartOptions = setHistogramOptions(dailyStats.initialHistogram, error ? defaultSymbol : symbol);
-    const spxHistoricalChartOptions = setTickerChartOptions(dailyHistoricalClose, error ? defaultSymbol : symbol);
-    const mean = parseFloat(dailyStats.initialDescriptive.mean);
-    const stdDev = parseFloat(dailyStats.initialDescriptive.std);
-
-    //Calculate the probability table
-    const binNames = [ //bin values
-        '<= 2.0%',
-        '-2.0% to -1.5%',
-        '-1.5% to -1.0%',
-        '1.0% to -0.5%',
-        '-0.5% to 0.0%',
-        '0.0% to 0.5%',
-        '0.5% to 1.0%',
-        '1.0% to 1.5%',
-        '1.5% to 2.0%',
-        '>= 2.0%'
-    ];
-    let freqTableData = [];
-
-
-    dailyStats.initialHistogram.forEach((point,i) =>
-    {
-       let newObj = {
-           binName: "",
-           freq: point.counts,
-           probability: parseFloat((point.counts / dailyStats.initialDescriptive.count) * 100),
-           cumulativeProb: 0.00
-       }
-
-       newObj.binName = binNames[i];
-       newObj.freq = point.counts;
-       if(i !== 0)
-       {
-           let cumulative = 0;
-
-           for(let p = 0; p < freqTableData.length && p < i; p++)
-           {
-               cumulative += freqTableData[p].probability;
-           }
-
-           cumulative += newObj.probability;
-           newObj.cumulativeProb = parseFloat(cumulative).toFixed(2);
-       }else{
-           newObj.cumulativeProb = (newObj.probability).toFixed(2);
-       }
-
-       freqTableData.push(newObj);
-    });
+    const histogramChartOptions =  await getHistogramChartOptions(statsPageData.histTable, symbol);
+    const spxHistoricalChartOptions = getTickerChartOptions(statsPageData.closeHistories, error ? defaultSymbol : symbol);
+    const mean = parseFloat(statsPageData.pctReturnMean);
+    const stdDev = parseFloat(statsPageData.stdDev);
 
     //std dev calcs
     const stdDevUpper= [((mean + (stdDev)) * 100).toFixed(2),
@@ -240,7 +83,7 @@ export default async function Stats({searchParams})
                                     <div>
                                         <p className="font-medium text-base-content/70">Total Trading Days</p>
                                         <div className="mt-4 flex items-center gap-2">
-                                            <h5 className="inline text-lg font-semibold">{dailyStats.initialDescriptive.count}</h5>
+                                            <h5 className="inline text-lg font-semibold">{statsPageData.closeHistories.length}</h5>
                                         </div>
                                     </div>
                                 </div>
@@ -250,7 +93,7 @@ export default async function Stats({searchParams})
                                         <p className="font-medium text-base-content/70">Mean Daily Return</p>
                                         <div
                                             className="mt-4 flex items-center gap-2 text-center w-full place-items-center">
-                                            <h5 className="inline text-lg font-semibold">{`${(dailyStats.initialDescriptive.mean * 100).toFixed(2)}%`}</h5>
+                                            <h5 className="inline text-lg font-semibold">{`${(mean * 100).toFixed(2)}%`}</h5>
                                         </div>
                                     </div>
                                 </div>
@@ -269,23 +112,23 @@ export default async function Stats({searchParams})
                             </div>
                             <div className="grid grid-cols-4 pt-2 gap-1 divide-x divide-base-content/10">
                                 <div className="text-center">
-                                    <p className="font-medium text-base-content/70">20 Day</p>
-                                    <p className="mt-1 text-lg font-semibold">{`${dailyStats.initialGeneralStats[0].value.toFixed(2)}%`}</p>
+                                    <p className="font-medium text-base-content/70">5 Day</p>
+                                    <p className="mt-1 text-lg font-semibold">{`${statsPageData.atrStats.fiveDay.toFixed(2)}%`}</p>
                                 </div>
 
                                 <div className="text-center">
-                                    <p className="font-medium text-base-content/70">60 Day</p>
-                                    <p className="mt-1 text-lg font-semibold">{`${dailyStats.initialGeneralStats[1].value.toFixed(2)}%`}</p>
+                                    <p className="font-medium text-base-content/70">20 Day</p>
+                                    <p className="mt-1 text-lg font-semibold">{`${statsPageData.atrStats.twentyDay.toFixed(2)}%`}</p>
                                 </div>
 
                                 <div className="text-center">
                                     <p className="font-medium text-base-content/70">120 Day</p>
-                                    <p className="mt-1 text-lg font-semibold">{`${dailyStats.initialGeneralStats[2].value.toFixed(2)}%`}</p>
+                                    <p className="mt-1 text-lg font-semibold">{`${statsPageData.atrStats.sixtyDay.toFixed(2)}%`}</p>
                                 </div>
 
                                 <div className="text-center">
                                     <p className="font-medium text-base-content/70">240 Day</p>
-                                    <p className="mt-1 text-lg font-semibold">{`${dailyStats.initialGeneralStats[3].value.toFixed(2)}%`}</p>
+                                    <p className="mt-1 text-lg font-semibold">{`${statsPageData.atrStats.hundredTwentyDay.toFixed(2)}%`}</p>
                                 </div>
                             </div>
                         </div>
@@ -329,7 +172,7 @@ export default async function Stats({searchParams})
                 <div className="card rounded bg-base-100 md:col-span-3 sm:col-span-1">
                     <div className="card-body border-gray-300 border p-4">
                         <HistogramChart
-                            chartOptions={histogramChartOptions}
+                            histogramChartOptions={histogramChartOptions}
                         />
                     </div>
                 </div>
@@ -339,7 +182,7 @@ export default async function Stats({searchParams})
                         <hr/>
 
                             <FreqTable
-                                freqData={freqTableData}
+                                histogramData={statsPageData.histTable}
                             />
 
                     </div>
