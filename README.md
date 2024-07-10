@@ -25,7 +25,7 @@ A live preview is available here: [Live Preview](https://correl-frontend.vercel.
 
 ### Python
 * Runs a daily query for new bond data provided by the FRED to update the DB tables.
-* Can also scrape economic indicator data but this is not used at the moment.
+* A module not included in this repo can also scrape economic indicator data but this is not used at the moment.
 * Also used to build the initial database of data.
 * Hosted on Azure.
 
