@@ -24,13 +24,14 @@ public class FilterClosePriceService
     {
         _cache = cache;
     }
-    public async Task<List<CloseHistory>> GetHistoricalClose(string ticker, IEnumerable<PriceTick> priceHistory)
+    public List<CloseHistory> GetHistoricalClose(string ticker, PriceTick[] priceHistory)
     {
-        var cacheKey = ticker;
+        var cacheKey = ticker + "_closeHistory";
         if(!_cache.TryGetValue(ticker, out List<CloseHistory> ret))
         {
             ret = new List<CloseHistory>();
-            foreach (var t in priceHistory)
+            Span<PriceTick> priceHistorySpan = priceHistory.AsSpan();
+            foreach (var t in priceHistorySpan)
             {
                 ret.Add(new CloseHistory(t.Date.ToDateOnly(), t.Close));
             }

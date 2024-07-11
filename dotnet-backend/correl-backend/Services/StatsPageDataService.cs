@@ -30,7 +30,6 @@ public class StatsPageDataService //We will use this to construct the data for t
         var pctGains = PercentageReturnCalculator.CalculatePercentageReturns(tickerData);
         FilterClosePriceService filterClosePriceService = new(_cache);
         
-        homePageData.CloseHistories = await filterClosePriceService.GetHistoricalClose(ticker, tickerData);
         homePageData.TotalTradingDays = tickerData.Length;
         homePageData.PctReturnMean = pctGains.MeanReturn;
         
@@ -47,6 +46,10 @@ public class StatsPageDataService //We will use this to construct the data for t
             Task.Run(() =>
             {
                 homePageData.StdDev = StdDevCalculator.CalcStdDev(pctGains);
+            }),
+            Task.Run(() =>
+            {
+                homePageData.CloseHistories = filterClosePriceService.GetHistoricalClose(ticker, tickerData);
             })
 
         };

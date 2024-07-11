@@ -1,7 +1,8 @@
+using System.Runtime.InteropServices;
 using YahooQuotesApi;
 
 namespace correl_backend.Calculations;
-public sealed record AtrPercentageStats //Stores ATR stats
+public record AtrPercentageStats //Stores ATR stats
 {
     public double FiveDay { get; set; }
     public double TwentyDay { get; set; }
@@ -19,39 +20,40 @@ public static class AvgTrueRangeCalculator
         }
         
         AtrPercentageStats atrStats = new AtrPercentageStats();
-        List<double> trueRange = new();
-        for (int i = priceHistory.Length - 1; i > 0; i--)
+        List<double> trueRangeList = new();
+        
+        Span<PriceTick> priceHistorySpan = priceHistory.AsSpan();
+        for (int i = priceHistorySpan.Length - 1; i > 0; i--)
         {
-            if (i - 1 > priceHistory.Length)
-                throw new IndexOutOfRangeException();
-            
-            double tr = Math.Max(priceHistory[i].High - priceHistory[i].Low,
-                Math.Max(Math.Abs(priceHistory[i].High - priceHistory[i - 1].Close), 
-                    priceHistory[i].Low - priceHistory[i - 1].Close));//
+            double tr = Math.Max(priceHistorySpan[i].High - priceHistorySpan[i].Low,
+                Math.Max(Math.Abs(priceHistorySpan[i].High - priceHistorySpan[i - 1].Close), 
+                    Math.Abs(priceHistorySpan[i].Low - priceHistorySpan[i - 1].Close)));
 
-            double trPercentage = tr / priceHistory[i].Open;
+            double trPercentage = tr / priceHistorySpan[i].Close;
             
             
-            trueRange.Add(trPercentage); //The true range is stored in the List<> from most recent to oldest
+            trueRangeList.Add(trPercentage); //The true range is stored in the List<> from most recent to oldest
         }
         
         double sum = 0;
-        for(int i = 0; i < trueRange.Count && i < 120; i++)
+        var trueRangeListSpan = CollectionsMarshal.AsSpan(trueRangeList);
+        for(int i = 0; i < trueRangeListSpan.Length && i < 120; i++)
         {
-            sum += trueRange[i];
+            sum += trueRangeListSpan[i];
+            int currentCount = i + 1;
             switch (i)
             {
                 case 4:
-                    atrStats.FiveDay = Math.Round((sum / i ) * 100,2,MidpointRounding.AwayFromZero);
+                    atrStats.FiveDay = Math.Round((sum / currentCount ) * 100,2,MidpointRounding.AwayFromZero);
                     break;
                 case 19:
-                    atrStats.TwentyDay = Math.Round((sum / i ) * 100,2,MidpointRounding.AwayFromZero);
+                    atrStats.TwentyDay = Math.Round((sum / currentCount ) * 100,2,MidpointRounding.AwayFromZero);
                     break;
                 case 59:
-                    atrStats.SixtyDay = Math.Round((sum / i ) * 100,2,MidpointRounding.AwayFromZero);
+                    atrStats.SixtyDay = Math.Round((sum / currentCount ) * 100,2,MidpointRounding.AwayFromZero);
                     break;
                 case 119:
-                    atrStats.HundredTwentyDay = Math.Round((sum / i ) * 100,2,MidpointRounding.AwayFromZero);
+                    atrStats.HundredTwentyDay = Math.Round((sum / currentCount ) * 100,2,MidpointRounding.AwayFromZero);
                     break;
             }
         }

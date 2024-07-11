@@ -1,24 +1,14 @@
 using System.Runtime.InteropServices;
 namespace correl_backend.Calculations;
 
-public sealed record HistogramPoint //Represents a single element within a HistogramTable
+public record HistogramPoint //Represents a single element within a HistogramTable
 {
     public string? BinName { get; set; }
     public int Frequency { get; set; }
     public double Probability { get; set; }
     public double CumulativeProbability { get; set; }
 }
-/*public record HistogramTable
-{
-    public List<string> BinNames { get; } =
-    [
-        "<= -2.0%", "-2.0% to -1.5%", "-1.5% to -1.0%", "-1.0% to -0.5%", "-0.5% to 0.0%", "0.0% to 0.5%",
-        "0.5% to 1.0%", "1.0% to 1.5%", "1.5% to 2.0%", ">= 2.0%"
-    ];
-    public List<int> Frequencies { get; } = new();
-    public List<double> Probabilities { get;} = new();
-    public List<double> CumulativeProbability { get; } = new();
-}*/
+
 public class HistogramCalculator
 {
     private static readonly Dictionary<double, string> BinValNames = new() 
@@ -39,13 +29,13 @@ public class HistogramCalculator
     
     public List<HistogramPoint> CalculateHistTable(PctReturns pctReturns)
     {
-        if (pctReturns.Returns.Count < 1)
+        if (pctReturns.ReturnsList.Count < 1)
             throw new ArgumentException("No data in PctReturns object");
         
         int[] counts = new int[10];
         
         //Since we're not mutating PctReturns we can use AsSpan for faster iteration
-        foreach (var gain in CollectionsMarshal.AsSpan(pctReturns.Returns))
+        foreach (var gain in CollectionsMarshal.AsSpan(pctReturns.ReturnsList))
         {
             for (int i = 0; i < _binValues.Length; i++)
             {
@@ -65,7 +55,7 @@ public class HistogramCalculator
         {
             HistogramPoint histogramPoint = new();
             histogramPoint.Frequency = (counts[i]); //Build our list of frequencies
-            double currentProbability = Math.Round((double)counts[i] / pctReturns.Returns.Count,4,MidpointRounding.AwayFromZero);
+            double currentProbability = Math.Round((double)counts[i] / pctReturns.ReturnsList.Count,4,MidpointRounding.AwayFromZero);
             histogramPoint.Probability = currentProbability; //Add probability for each bin
             
             double cumulative = 0;

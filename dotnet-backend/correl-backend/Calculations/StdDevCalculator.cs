@@ -7,12 +7,12 @@ public static class StdDevCalculator
     public static double CalcStdDev(PctReturns pctReturns)
     {
         double sum = 0;
-        foreach (var gain in CollectionsMarshal.AsSpan(pctReturns.Returns))
+        foreach (var gain in CollectionsMarshal.AsSpan(pctReturns.ReturnsList))
         {
             sum += Math.Pow(gain - pctReturns.MeanReturn, 2);
         }
 
-        sum /= pctReturns.Returns.Count;
+        sum /= pctReturns.ReturnsList.Count;
 
         return Math.Round(Math.Sqrt(sum),4,MidpointRounding.AwayFromZero);
     }
