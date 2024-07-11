@@ -18,8 +18,8 @@ public class FilterClosePriceServiceTests
         var yFinance = new FilterClosePriceService(cache);
 
         var priceHistory = await YTickerDataService.GetPriceHistory("^GSPC");
-        var ret = await yFinance.GetHistoricalClose("^GSPC",priceHistory);
-        Assert.True(ret.Count > 0);
+        var closePriceList = await yFinance.GetHistoricalClose("^GSPC",priceHistory);
+        Assert.True(closePriceList.Count > 0);
     }
     
 }
